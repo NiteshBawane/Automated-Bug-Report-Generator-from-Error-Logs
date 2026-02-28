@@ -1,0 +1,187 @@
+{
+  "name": "Automated Bug Report Generator from Error Logs",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Paste your error log below and I will generate a structured bug report for you.",
+        "options": {
+          "showWelcomeScreen": false
+        }
+      },
+      "id": "52b54fb2-c260-470c-b1bc-f9cc341d9cde",
+      "name": "Error Log Input",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        256,
+        304
+      ],
+      "webhookId": "e33ea71d-49da-4565-a00c-959983714d90"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an expert QA Engineer. Your task is to analyze error logs and generate structured bug reports.\n\nIMPORTANT CONSTRAINTS:\n- Use ONLY the log data provided in the user input\n- Do NOT make assumptions or add information not present in the logs\n- If any field cannot be determined from the log data, mark it as [UNKNOWN]\n- Extract all relevant details: timestamps, endpoints, error codes, user context, and technical details\n\nGenerate a comprehensive bug report with the following structure:\n- Title: Clear, concise description of the issue\n- Severity: Critical/High/Medium/Low based on error type and impact\n- Steps to Reproduce: Inferred from the log data (API endpoint, method, parameters)\n- Expected Result: What should have happened\n- Actual Result: What actually happened according to the log\n\nBe precise, factual, and only use information directly from the error log."
+        }
+      },
+      "id": "15c5d1d4-3f6a-4b8b-a76f-f1df97e10e82",
+      "name": "QA Bug Report Generator",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "cec56e64-4726-4e45-ab2d-253492f8fc9d",
+      "name": "Groq LLM",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        488,
+        528
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "8pBC1MbMvU8hlAaH",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"title\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"Clear, concise bug title\"\n\t\t},\n\t\t\"severity\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"enum\": [\"Critical\", \"High\", \"Medium\", \"Low\"],\n\t\t\t\"description\": \"Bug severity level\"\n\t\t},\n\t\t\"stepsToReproduce\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"Steps to reproduce the issue\"\n\t\t},\n\t\t\"expectedResult\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"What should have happened\"\n\t\t},\n\t\t\"actualResult\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"What actually happened\"\n\t\t}\n\t},\n\t\"required\": [\"title\", \"severity\", \"stepsToReproduce\", \"expectedResult\", \"actualResult\"]\n}"
+      },
+      "id": "57aa665a-aa66-4b14-81ef-bcc9c5bf4a0c",
+      "name": "Bug Report Format",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        616,
+        528
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "title",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $json.output.title }}"
+            },
+            {
+              "id": "severity",
+              "name": "severity",
+              "type": "string",
+              "value": "={{ $json.output.severity }}"
+            },
+            {
+              "id": "stepsToReproduce",
+              "name": "stepsToReproduce",
+              "type": "string",
+              "value": "={{ $json.output.stepsToReproduce }}"
+            },
+            {
+              "id": "expectedResult",
+              "name": "expectedResult",
+              "type": "string",
+              "value": "={{ $json.output.expectedResult }}"
+            },
+            {
+              "id": "actualResult",
+              "name": "actualResult",
+              "type": "string",
+              "value": "={{ $json.output.actualResult }}"
+            },
+            {
+              "id": "formattedReport",
+              "name": "formattedReport",
+              "type": "string",
+              "value": "=**BUG REPORT**\n\n**Title:** {{ $json.output.title }}\n**Severity:** {{ $json.output.severity }}\n\n**Steps to Reproduce:**\n{{ $json.output.stepsToReproduce }}\n\n**Expected Result:**\n{{ $json.output.expectedResult }}\n\n**Actual Result:**\n{{ $json.output.actualResult }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f01831f-21b4-4abc-baa5-82554d8c2bdc",
+      "name": "Format Bug Report Output",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Error Log Input": {
+      "main": [
+        [
+          {
+            "node": "QA Bug Report Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq LLM": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "QA Bug Report Generator",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bug Report Format": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "QA Bug Report Generator",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "QA Bug Report Generator": {
+      "main": [
+        [
+          {
+            "node": "Format Bug Report Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7a276217-a339-4a84-93b0-b5ce7721801d",
+  "meta": {
+    "instanceId": "36fdd534dd804411648e0070ef362ca9057de9c39b61a31902d074bf6985fcea"
+  },
+  "id": "IVkGjRRDd8iq8RBu",
+  "tags": []
+}
