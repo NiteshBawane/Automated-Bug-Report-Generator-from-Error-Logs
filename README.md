@@ -3,7 +3,7 @@
 This repository contains a complete n8n workflow that automates the generation of structured bug reports from raw error logs using AI.
 
 ## 🔗 Repository Description
-**Project Link:** [https://github.com/NiteshBawane/n8n-bug-report-generator](https://github.com/NiteshBawane/n8n-bug-report-generator)
+**Project Link:** [https://github.com/NiteshBawane/Automated-Bug-Report-Generator-from-Error-Logs]
 
 ## 🎯 Problem Statement
 Manual bug reporting is a bottleneck. This workflow reads error logs, analyzes them via an LLM (QA Engineer role), and outputs a formatted report (Title, Severity, Steps to Reproduce, Expected vs Actual Result).
